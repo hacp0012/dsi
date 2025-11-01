@@ -1,0 +1,32 @@
+name: dsi
+description: Data Sync Ineterface.
+version: 1.0.0
+# repository: https://github.com/my_org/my_repo
+
+environment:
+  sdk: ^3.9.2
+
+# Add regular dependencies here.
+dependencies:
+  # path: ^1.9.0
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  lints: ^6.0.0
+  test: ^1.25.6
+
+# This package supports all platforms listed below.
+platforms:
+  android:
+  ios:
+  linux:
+  macos:
+  web:
+  windows:
+
+topics:
+  - state-manager
+  - state
+  - getit
+  - watch
