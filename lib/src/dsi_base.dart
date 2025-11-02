@@ -19,7 +19,7 @@ part 'dsi_value.dart';
 // * PUBLIC ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 /// __Data Sync Interface.__
 ///
-/// You will remark that all outputs are null safe. Because you can dispose a model via [unRegisterModel]
+/// You will remark that all outputs are null safe. Because you can dispose a model via [unregister]
 /// of if is the value DSI, via [DsiInstance.freeIt].
 ///
 /// __VALUE DSI__
@@ -250,7 +250,7 @@ class Dsi {
   /// Unregister a registred model.
   ///
   /// If model instance exist, old will be removed.
-  static bool unRegisterModel<T>() {
+  static bool unregister<T>() {
     var inst = _DataSyncInterfaceSingleton.instance;
     for (int index = 0; index < inst.modelsList.length; index++) {
       var model = inst.modelsList[index];
@@ -264,6 +264,8 @@ class Dsi {
   }
 
   /// Rebuild this context.
+  ///
+  /// Can be used to rebuid (update) provided (ui) context.
   static void rebuildThis(BuildContext context) {
     _DsiInnerTreeObserver.of<DsiChangeNotifier>(context)._shuldNotifyTree();
   }

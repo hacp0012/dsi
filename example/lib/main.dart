@@ -48,7 +48,9 @@ class DemoHomePage extends StatefulWidget {
   State<DemoHomePage> createState() => _DemoHomePageState();
 }
 
-class _DemoHomePageState extends State<DemoHomePage> {
+class _DemoHomePageState extends State<DemoHomePage> with DsiUiValueMixin {
+  late var simpleCount = uiValue<int>(0);
+
   // VIEW ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
   @override
   void initState() {
@@ -104,10 +106,26 @@ class _DemoHomePageState extends State<DemoHomePage> {
                 label: Text("Open demo view"),
                 style: ButtonStyle(iconAlignment: IconAlignment.end),
               ),
+
+              // UI VALUE
+              SizedBox(height: 38),
+              Text("DSI UI VALUE", style: TextStyle(fontWeight: FontWeight.bold)),
+              Text("Test for UI value: simplify the call of setState"),
+              // USAGE -----------------------------------------------------------------------------------------------
+              Text("${simpleCount.value}", style: Theme.of(context).textTheme.titleLarge, textAlign: TextAlign.center),
+              ElevatedButton.icon(
+                onPressed: () => simpleCount.value += 1,
+                icon: Icon(Icons.add),
+                label: Text("Increment counter"),
+                style: ButtonStyle(iconAlignment: IconAlignment.end),
+              ),
             ],
           ),
         ],
       ),
     );
   }
+
+  @override
+  void Function(void Function() p1) get dsiStater => setState;
 }

@@ -10,86 +10,62 @@ For general information about developing packages, see the Dart guide for
 and the Flutter guide for
 [developing packages and plugins](https://flutter.dev/to/develop-packages). 
 -->
+
 # Data Sync Interface (DSI)
 
 Synchroniser et partager des données, des callbacks et des valeurs globales entre widgets et modèles sans couplage fort.
 
 <p align="center">
-  <img src="./dsi_logo.png" width="200" alt="DSI Logo">
+  <img src="assets/dsi_logo.png" width="200" alt="DSI Logo">
 </p>
 
-<h2 align="center">Data Sync Interface (DSI)</h2>
-
-<!-- # Data Sync Interface (DSI) -->
 DSI est une petite bibliothèque Flutter/Dart pour synchroniser et partager des données, des callbacks et des valeurs globales entre widgets et modèles sans couplage fort.
 
-Principaux concepts :
+## Principaux concepts
 
-- Partage de modèles observables via `Dsi` / `Dsi.register` et `Dsi.update`.
-- Valeurs globales (ENV) via `Dsi.values`.
+- Partage de modèles observables via `Dsi.registerModel`, `Dsi.of()` et `Dsi.update()`.
+- Valeurs globales avec `Dsi.values`.
 - Callbacks nommés via `Dsi.callback`.
-- Instances légères observables via `DsiInstance`.
+- Helpers UI légers via `DsiUiValue` et `DsiUiValueMixin`.
 
-Features
+## Fonctionnalités
 
 - Enregistrement et mise à jour de modèles (supporte `ChangeNotifier` étendu).
-- Notifier des widgets liés automatiquement.
+- Notifications automatiques des widgets liés.
 - Gestion de valeurs partagées et écouteurs par clé.
 - Callbacks nommés pour communication ponctuelle entre écrans.
+- Utilitaires pour réduire les appels `setState` avec `DsiUiValue` et `DsiUiValueMixin`.
 
-Installation
+### Utilisation dans example
 
-1. Dans votre projet Flutter, ajoutez DSI en dépendance locale (déjà configuré pour l'exemple) :
+1. Depuis le dossier `example` :
 
-```sh
-# depuis le dossier example
+Voir le fichier main de l'exemple : [example/lib/main.dart](example/lib/main.dart)
+
+```powershell
 cd example
 flutter pub get
 flutter run
 ```
 
-Utilisation rapide
+### Utilisation rapide
 
-1) Utiliser le modèle observé (avec `DsiChangeNotifier`)
+1) Modèles observables (avec `DsiChangeNotifier`)
 
-- Exemple de modèle : [example/lib/models/data_model.dart](example/lib/models/data_model.dart)  
-- Classe utile : [`DsiChangeNotifier`](lib/dsi.dart) — implémentation dans [lib/src/dsi_change_notifier.dart](lib/src/dsi_change_notifier.dart)
-
-Exemple :
+### Exemple de modèle (lib/models/counter_model.dart) :
 
 ```dart
-// enregistrez un modèle (ex: dans main ou init)
-Dsi.register(DataModel());
-
-// lire dans un widget :
-Text("Count: ${Dsi.of<DataModel>(context)?.count ?? 'Not yet'}")
-
-// mettre à jour via Dsi :
-Dsi.update<DataModel>((model) {
-  model.count = (model.count ?? 0) + 1;
-  return model;
-});
-```
-
-### Example plus detaile
-
-Voici un exemple complet montrant l'intégration et l'utilisation de DSI dans une application Flutter :
-
-1 . D'abord, créez votre modèle :
-
-```dart
-// lib/models/counter_model.dart
 import 'package:dsi/dsi.dart';
 
 class CounterModel extends DsiChangeNotifier {
   int _count = 0;
   int get count => _count;
-  
+
   void increment() {
     _count++;
     notifyListeners();
   }
-  
+
   void reset() {
     _count = 0;
     notifyListeners();
@@ -97,97 +73,126 @@ class CounterModel extends DsiChangeNotifier {
 }
 ```
 
-2 . Initialisez DSI dans votre main ou autre endroit :
+Enregistrement du modele (par ex. dans `main.dart`) :
 
 ```dart
-// lib/main.dart
-import 'package:flutter/material.dart';
-import 'package:dsi/dsi.dart';
-import 'models/counter_model.dart';
-
 void main() {
-  // Enregistrez votre modèle
-  Dsi.registerModel(CounterModel());
-  
-  // Enregistrer l'arbre dans DSI
+  Dsi.register(CounterModel());
   runApp(const MyApp());
-}
-
-
-// lib/my_app.dart
-import 'package:flutter/material.dart';
-import 'screens/counter_screen.dart';
-
-class MyApp extends StatelessWidget {
-    const MyApp({Key? key}) : super(key: key);
-
-    @override
-    Widget build(BuildContext context) {
-        return MaterialApp(
-            title: 'DSI Example',
-            theme: ThemeData(
-                primarySwatch: Colors.blue,
-            ),
-            // **** Tres important ****
-            home: DsiTreeObserver(child: CounterScreen()),
-        );
-    }
 }
 ```
 
-3 . Créez vos écrans :
+Accès et mise à jour :
 
 ```dart
-// lib/screens/counter_screen.dart
-import 'package:flutter/material.dart';
-import 'package:dsi/dsi.dart';
-import '../models/counter_model.dart';
+// Connecter l'app a l'observateur DSI (important)
+DsiTreeObserver(child: MaterialApp(...));
 
-class CounterScreen extends StatelessWidget {
+// lecture
+final counter = Dsi.of<CounterModel>(context);
+Text('Count: ${counter?.count ?? 0}');
+Text('Count: ${Dsi.of<CounterModel>(context)?.count}');
+Text('Count: ${Dsi.model<CounterModel>(context)?.count}');
+
+// via la méthode du modèle
+counter?.increment();
+
+// ou via Dsi.update
+Dsi.update<CounterModel>((m) { m.count += 1; return m; });
+```
+
+### Valeurs globales (Dsi.values)
+
+```dart
+// enregistrer une valeur partagée
+Dsi.values.register<int>(data: 0, key: 'globalCount');
+
+// notifier les écouteurs
+Dsi.values.notifyTo<int>('globalCount', 42);
+
+// écouter
+var sub = Dsi.values.listenTo<int>('globalCount', (v) => print(v));
+```
+
+### Callbacks nommés
+
+```dart
+// enregistrer
+Dsi.callback.register('my_key', (payload) => print(payload));
+
+// appeler depuis un autre écran
+Dsi.callback.call('my_key', payload: 'message');
+```
+
+### DsiUiValue et DsiUiValueMixin (nouvelle section)
+
+Détails rapides :
+
+- `DsiUiValue<T>` est un petit wrapper pour un état local UI qui réduit la verbosité autour de `setState`.
+- `DsiUiValueMixin` est un mixin à utiliser sur la `State` d'un `StatefulWidget` pour créer facilement des `DsiUiValue` en utilisant un getter `dsiStater` qui doit renvoyer `setState`.
+
+API essentielle (implémentation dans `lib/src`):
+
+- `DsiUiValue<T>` : constructeur `DsiUiValue(void Function(void Function()) setState, T initialValue)`.
+  - `.value` : lecture/écriture (écriture déclenche `setState`).
+  - `.silent` : écrire sans déclencher `setState`.
+  - `.update()` : forcer une mise à jour (appelle `setState(() {})`).
+
+- `DsiUiValueMixin` :
+  - Déclare le getter abstrait `void Function(void Function()) get dsiStater;` que la `State` doit implémenter (`=> setState`).
+  - `uiValue<T>(T initial)` renvoie un `DsiUiValue<T>` déjà lié au `dsiStater`.
+  - `uiUpdate([fn])` effectue un `setState` via `dsiStater`.
+
+Exemple d'utilisation (dans un `StatefulWidget`)
+
+```dart
+class SettingsScreen extends StatefulWidget {
+  const SettingsScreen({Key? key}) : super(key: key);
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> with DsiUiValueMixin {
+  // Bind le dsiStater au setState de ce State
+  @override
+  void Function(void Function()) get dsiStater => setState;
+
+  // late pour pouvoir l'initialiser avant initState si nécessaire
+  late final DsiUiValue<bool> isLoading = uiValue(false);
+  // late var isLoading = uiValue(false);
+
+  @override
+  void initState() {
+    super.initState();
+    // Exemple : enregistrer un callback DSI
+    Dsi.callback.register('onReset', (_) {
+      Dsi.update<CounterModel>((m) { m.reset(); return m; });
+    });
+  }
+
+  @override
+  void dispose() {
+    Dsi.callback.unregister('onReset');
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Accédez au modèle via DSI
-    final counter = Dsi.of<CounterModel>(context);
-    
     return Scaffold(
-      appBar: AppBar(title: Text('DSI Counter Example')),
+      appBar: AppBar(title: const Text('Settings')),
       body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              'Count: ${counter?.count ?? 0}',
-              style: Theme.of(context).textTheme.headline4,
-            ),
+            if (isLoading.value) const CircularProgressIndicator(),
             ElevatedButton(
-              onPressed: () {
-                // Mettez à jour via DSI
-                counter.increment();
-                // ou
-                Dsi.update<CounterModel>((model) {
-                  model.count += 1;
-                  return model;
-                });
+              onPressed: () async {
+                // changer la valeur et déclencher rebuild
+                isLoading.value = true;
+                await Future.delayed(const Duration(seconds: 1));
+                isLoading.value = false;
               },
-              child: Text('Increment'),
-            ),
-            
-            // Exemple de valeur globale
-            DsiBuilder<int>(
-              // Enregistrez et écoutez une valeur globale
-              idKey: 'globalCount'
-              builder: (context, value) {
-                return Text('Global count: $value');
-              },
-            ),
-            
-            // Exemple de callback entre écrans
-            ElevatedButton(
-              onPressed: () {
-                // Appelez un callback enregistré ailleurs
-                Dsi.callback.call('onReset');
-              },
-              child: Text('Reset Counter'),
+              child: const Text('Do work'),
             ),
           ],
         ),
@@ -197,119 +202,92 @@ class CounterScreen extends StatelessWidget {
 }
 ```
 
-4 . Enregistrez des callbacks dans un autre écran :
+### MaterialApp - exemple complet
 
 ```dart
-// lib/screens/settings_screen.dart
-class SettingsScreen extends StatefulWidget {
+// lib/app.dart
+import 'package:flutter/material.dart';
+import 'package:dsi/dsi.dart';
+import 'screens/counter_screen.dart';
+import 'screens/settings_screen.dart';
+
+class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'DSI Demo',
+      theme: ThemeData(primarySwatch: Colors.blue),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const CounterScreen(),
+        '/settings': (context) => const SettingsScreen(),
+      },
+      builder: (context, child) {
+        // Exemple d'utilisation de Dsi.values pour gérer un thème simple
+        Dsi.values.register<bool>(data: false, key: 'isDarkMode');
+
+        return DsiBuilder<bool>(
+          idKey: 'isDarkMode',
+          builder: (context, isDark) {
+            return Theme(
+              data: isDark ? ThemeData.dark() : ThemeData.light(),
+              child: child ?? const SizedBox.shrink(),
+            );
+          },
+        );
+      },
+    );
+  }
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
-  @override
-  void initState() {
-    super.initState();
-    // Enregistrez un callback
-    Dsi.callback.register('onReset', (_) {
-      Dsi.update<CounterModel>((model) {
-        model.reset();
-        return model;
-      });
-    });
-  }
-
-  @override
-  void dispose() {
-    // Nettoyez le callback
-    Dsi.callback.unregister('onReset');
-    super.dispose();
-  }
-  
-  // ... reste du widget
+// lib/main.dart
+void main() {
+  Dsi.registerModel(CounterModel());
+  runApp(const MyApp());
 }
 ```
 
-Cet exemple montre les principales fonctionnalités de DSI :
+#### Fichiers utiles
 
-- Modèle partagé avec `DsiChangeNotifier`
-- Accès au modèle via `Dsi.of()`
-- Mise à jour via `Dsi.update()`
-- Valeurs globales avec `Dsi.values`
-- Communication entre écrans via `Dsi.callback`
+- Point d'export : `lib/dsi.dart`
+- Implémentations : `lib/src/*` (ex: `dsi_base.dart`, `dsi_change_notifier.dart`, `dsi_ui_value.dart`, `dsi_ui_value_mixin.dart`)
+- Exemples : `example/lib/...` (pages et modèles d'exemple)
 
-Voir l'exemple complet : [example/lib/screens/dsi/dsi_page_1.dart](example/lib/screens/dsi/dsi_page_1.dart).
-
-## 2 ) Valeurs globales (ENV)
-
-- API : [`DsiValue`](lib/dsi.dart) et son implémentation [lib/src/dsi_value.dart](lib/src/dsi_value.dart)
-
-Exemple :
-
-```dart
-// enregistrer une valeur partagée
-Dsi.values.register<int>(data: 0, key: 'counter');
-
-// notifier les écouteurs
-Dsi.values.notifyTo<int>('counter', 42);
-
-// écouter
-var sub = Dsi.values.listenTo<int>('counter', (v) => print(v));
-```
-
-Voir : [example/lib/screens/value/value_page_1_screen.dart](example/lib/screens/value/value_page_1_screen.dart).
-
-## 3 ) Callbacks nommés
-
-- API : [`DsiCallback`](lib/dsi.dart)
-
-Exemple :
-
-```dart
-// enregistrer
-Dsi.callback.register('my_key', (payload) => print(payload));
-
-// appeler depuis un autre écran
-Dsi.callback.call('my_key', payload: "message");
-```
-
-Voir : [example/lib/screens/callback/callback_page_1_screen.dart](example/lib/screens/callback/callback_page_1_screen.dart) et [example/lib/screens/callback/callback_page_2_screen.dart](example/lib/screens/callback/callback_page_2_screen.dart).
-
-API publique (exports)
-
-- [`Dsi`](lib/dsi.dart) — point d'entrée (implémentation principale : [lib/src/dsi_base.dart](lib/src/dsi_base.dart))
-- [`DsiValue`](lib/dsi.dart) — valeurs partagées ([lib/src/dsi_value.dart](lib/src/dsi_value.dart))
-- [`DsiCallback`](lib/dsi.dart) — callbacks nommés
-- [`DsiChangeNotifier`](lib/dsi.dart) — base pour modèles observables ([lib/src/dsi_change_notifier.dart](lib/src/dsi_change_notifier.dart))
-- [`DsiInstance`](lib/src/dsi_instance.dart) — instances de valeur observables
-
-Fichiers utiles
-
-- Code public/export : [lib/dsi.dart](lib/dsi.dart)  
-- Implémentation principale : [lib/src/dsi_base.dart](lib/src/dsi_base.dart)  
-- Exemples : [example/lib/main.dart](example/lib/main.dart) et dossier [example/lib](example/lib)
-
-Bonnes pratiques
+#### Bonnes pratiques
 
 - Utiliser `DsiChangeNotifier` pour vos modèles afin de bénéficier des notifications automatiques.
-- Pour des changements silencieux (sans rebuild), utilisez les options `notify: false` lorsque disponible.
-- Libérez les ressources (listeners, callbacks) dans `dispose()` des `StatefulWidget` quand nécessaire (voir [example/...callback...](example/lib/screens/callback)).
+- Utiliser `DsiUiValue`/`DsiUiValueMixin` pour réduire la surface d'utilisation de `setState` sur des valeurs UI locales.
+- Libérez les ressources (listeners, callbacks) dans `dispose()` des `StatefulWidget` quand nécessaire.
 
 Contribuer
 
 - Ouvrir une issue ou PR.
-- Respecter la licence (voir [LICENSE](LICENSE)) et le changelog [CHANGELOG.md](CHANGELOG.md).
+- Respecter la licence (voir `LICENSE`) et le changelog (`CHANGELOG.md`).
 
 Licence
 
-- Projet sous licence : [LICENSE](LICENSE)
+[BS2](./LICENSE) — voir le fichier LICENSE du projet.
 
 Changelog
 
-- Voir [CHANGELOG.md](CHANGELOG.md)
+- Voir `CHANGELOG.md`
 
-Exemples rapides et références
+Essayer l'exemple
 
-- Exemple complet de page DSI : [example/lib/screens/dsi/dsi_page_1.dart](example/lib/screens/dsi/dsi_page_1.dart)  
-- Modèle d'exemple : [example/lib/models/data_model.dart](example/lib/models/data_model.dart)  
-- Point d'export : [lib/dsi.dart](lib/dsi.dart)
+1. Ouvrez un terminal dans `example/` :
+
+```powershell
+cd example
+flutter pub get
+flutter run
+```
+
+2. Si vous avez ajouté le logo, vérifiez `pubspec.yaml` et `assets/`.
+
+Résumé des changements
+
+- Ajout de la documentation et d'exemples pour `DsiUiValue` et `DsiUiValueMixin`.
+- Exemple `MaterialApp` complet montrant l'intégration DSI (modèle, valeurs, callbacks, UI mixin).
+- Indication sur l'asset `dsi_logo.png` et la configuration `pubspec.yaml`.
