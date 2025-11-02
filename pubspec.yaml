@@ -1,7 +1,7 @@
 name: dsi
-description: Data Sync Ineterface.
+description: Data Sync Ineterface - a tiny and powerfull state manager.
 version: 1.0.0
-# repository: https://github.com/my_org/my_repo
+repository: https://github.com/hacp0012/dsi
 
 environment:
   sdk: ^3.9.2
@@ -30,3 +30,4 @@ topics:
   - state
   - getit
   - watch
+  - ui
