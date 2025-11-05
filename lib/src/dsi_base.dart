@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 
 // Privates
 part 'core_data_sync_interface_singleton.dart';
-part 'dsi_instance.dart';
+part 'dsi_value_instance.dart';
 part 'dsi_tree_observer.dart';
 part 'dsi_inner_tree_observer.dart';
 
@@ -20,7 +20,7 @@ part 'dsi_value.dart';
 /// __Data Sync Interface.__
 ///
 /// You will remark that all outputs are null safe. Because you can dispose a model via [unregister]
-/// of if is the value DSI, via [DsiInstance.freeIt].
+/// of if is the value DSI, via [DsiValueInstance.freeIt].
 ///
 /// __VALUE DSI__
 ///

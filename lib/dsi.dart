@@ -4,4 +4,5 @@
 library;
 
 export 'src/dsi_ui_value_mixin.dart';
-export 'src/dsi_base.dart' show Dsi, DsiValue, DsiCallback, DsiExtention, DsiChangeNotifier, DsiBuilder, DsiTreeObserver;
+export 'src/dsi_base.dart'
+    show Dsi, DsiValue, DsiValueInstance, DsiCallback, DsiExtention, DsiChangeNotifier, DsiBuilder, DsiTreeObserver;

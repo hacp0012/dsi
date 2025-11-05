@@ -33,7 +33,7 @@ class DsiBuilder<T> extends StatelessWidget {
         stream: dataSync._stream,
         builder: (context, asyncSnapshot) {
           if (asyncSnapshot.hasData && asyncSnapshot.data != null && Dsi.values.hasKey(asyncSnapshot.data!)) {
-            var data = Dsi.values.instance(idKey);
+            var data = Dsi.values.get(idKey);
             return builder(context, data?.value);
           }
 

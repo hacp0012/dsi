@@ -1,9 +1,10 @@
 part of 'dsi_base.dart';
 
+/// Global value handler.
 class DsiValue {
   /// Register new value in env instance.
-  DsiInstance<T> register<T>({required T data, String? key}) {
-    var dataSyncValue = DsiInstance<T>(value: data, idKey: key);
+  DsiValueInstance<T> register<T>({required T data, String? key}) {
+    var dataSyncValue = DsiValueInstance<T>(value: data, idKey: key);
 
     var dataSyncSengleton = _DataSyncInterfaceSingleton.instance;
     dataSyncSengleton.addDataSyncInstanceToQueue(dataSyncValue);
@@ -31,10 +32,10 @@ class DsiValue {
     return false;
   }
 
-  /// Get datasync instance.
+  /// Get datasync value instance.
   ///
   /// If key not found, null will be returned.
-  DsiInstance? instance(String key) {
+  DsiValueInstance? get(String key) {
     var inst = _DataSyncInterfaceSingleton.instance;
     for (int i = 0; i < inst.dataList.length; i++) {
       if (inst.dataList[i].key == key) return inst.dataList[i];

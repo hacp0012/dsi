@@ -1,29 +1,29 @@
 part of 'dsi_base.dart';
 
 // * PUBLIC ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-/// DSI Tree Observer.
+/// DSI Tree Observer. Use on Top of tree, may be up [MaterialApp].
 ///
-/// Use to observe tree.
-/// It will rebuild the depended tree when change is notified.
+/// This observer, rebuild tree when change is notified in tree.
 ///
-/// > Use with [Dsi] model.
+/// ```dart
+/// DsiTreeObserver(
+///   models: [...],
+///   child: MaterialApp(...),
+/// );
+/// ```
+///
+/// When your register a model, [keepOld] is defaultely true; This prevent to
+/// re-register registreds models (That keep or concerve ald instances).
+///
+/// > If forgoted, an assert will be thrown.
 ///
 class DsiTreeObserver extends StatelessWidget {
-  /// Use on Top of tree, may be up [MaterialApp].
+  /// DSI Tree Observer.
   ///
-  /// This observer, rebuild tree when change is notified in tree.
+  /// Use to observe tree.
+  /// It will rebuild the depended tree when change is notified.
   ///
-  /// ```dart
-  /// DsiTreeObserver(
-  ///   models: [...],
-  ///   child: MaterialApp(...),
-  /// );
-  /// ```
-  ///
-  /// When your register a model, [keepOld] is defaultely true; This prevent to
-  /// re-register registreds models (That keep or concerve ald instances).
-  ///
-  /// > If forgoted, an assert will be thrown.
+  /// > Use with [Dsi] model.
   ///
   DsiTreeObserver({super.key, this.models, required this.child}) {
     if (models != null) {

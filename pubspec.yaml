@@ -1,6 +1,6 @@
 name: dsi
 description: Data Sync Ineterface - a tiny and powerfull state manager.
-version: 1.0.0
+version: 1.0.1
 repository: https://github.com/hacp0012/dsi
 
 environment:

@@ -3,14 +3,14 @@ Synchronize and share data, callbacks and global values between widgets and mode
 # Data Sync Interface (DSI)
 
 <p align="center">
-    <img src="assets/dsi_logo.png" width="200" alt="DSI Logo">
+    <img src="./assets/dsi_logo.png" width="200" alt="DSI Logo">
 </p>
 
 DSI is a small Flutter/Dart library to synchronize and share data, callbacks and global values between widgets and models without strong coupling.
 
 ## Main concepts
 
-- Share observable models via `Dsi.registerModel`, `Dsi.of()` and `Dsi.update()`.
+- Share observable models via `Dsi.register`, `Dsi.of()` and `Dsi.update()`.
 - Global values with `Dsi.values`.
 - Named callbacks via `Dsi.callback`.
 - Lightweight UI helpers via `DsiUiValue` and `DsiUiValueMixin`.
@@ -80,6 +80,7 @@ final counter = Dsi.of<CounterModel>(context);
 Text('Count: ${counter?.count ?? 0}');
 Text('Count: ${Dsi.of<CounterModel>(context)?.count}');
 Text('Count: ${Dsi.model<CounterModel>(context)?.count}');
+Text('Count: ${context.dsi<CounterModel>()?.count} : From DSI Extension');
 
 // via model method
 counter?.increment();
@@ -92,13 +93,19 @@ Dsi.update<CounterModel>((m) { m.count += 1; return m; });
 
 ```dart
 // register a shared value
-Dsi.values.register<int>(data: 0, key: 'globalCount');
+DsiValueInstance instance =  Dsi.values.register<int>(data: 0, key: 'globalCount');
 
 // notify listeners
 Dsi.values.notifyTo<int>('globalCount', 42);
 
 // listen
 var sub = Dsi.values.listenTo<int>('globalCount', (v) => print(v));
+
+// update
+instance.value = 42;
+
+// Get value instance
+DsiValueInstance? instance = Dsi.values.get<int>('globalCount');
 ```
 
 ### Named callbacks

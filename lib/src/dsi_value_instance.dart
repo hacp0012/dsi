@@ -2,8 +2,8 @@ part of 'dsi_base.dart';
 
 // ! PRIVATE |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 /// Data Sync Instance.
-class DsiInstance<T> {
-  DsiInstance({required T value, required String? idKey, this.onChanged}) {
+class DsiValueInstance<T> {
+  DsiValueInstance({required T value, required String? idKey, this.onChanged}) {
     _value = value;
     idKey ??= _randomStringGen(9 * 8);
     key = idKey;

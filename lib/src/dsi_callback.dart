@@ -1,5 +1,6 @@
 part of 'dsi_base.dart';
 
+/// Named callback hangler.
 class DsiCallback {
   /// Register a callback that we can call any way to notify change or action.
   ///

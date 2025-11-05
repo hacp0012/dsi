@@ -20,13 +20,13 @@ class _DataSyncInterfaceSingleton {
   @protected
   late Stream<String> _stream;
   @protected
-  List<DsiInstance> dataList = [];
+  List<DsiValueInstance> dataList = [];
 
   /// Add a DSI (Data Sync Instance) to queue.
   ///
   /// If DSI has same key, the old instance is remove and the new is appended;
   @protected
-  void addDataSyncInstanceToQueue(DsiInstance dsi) {
+  void addDataSyncInstanceToQueue(DsiValueInstance dsi) {
     dataList.removeWhere((element) => element.key == dsi.key);
     dataList.add(dsi);
   }

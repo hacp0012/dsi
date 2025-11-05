@@ -21,7 +21,7 @@ class _ValuePage1ScreenState extends State<ValuePage1Screen> {
     Dsi.values.register<int>(data: 0, key: DataKeys.VALUE_ENV_KEY);
 
     // USAGE ------------------------------------------------------------------
-    subscription = Dsi.values.instance(DataKeys.VALUE_ENV_KEY)?.listen((data) {
+    subscription = Dsi.values.get(DataKeys.VALUE_ENV_KEY)?.listen((data) {
       setState(() => count = data ?? count);
     });
 
@@ -64,7 +64,7 @@ class _ValuePage1ScreenState extends State<ValuePage1Screen> {
                       // USAGE -------------------------------------------------------
                       Dsi.values.notifyTo<int>(
                         DataKeys.VALUE_ENV_KEY,
-                        (Dsi.values.instance(DataKeys.VALUE_ENV_KEY)?.value ?? 0) + 1,
+                        (Dsi.values.get(DataKeys.VALUE_ENV_KEY)?.value ?? 0) + 1,
                       );
                     },
                     child: Text("Increment value"),
