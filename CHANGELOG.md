@@ -1,8 +1,12 @@
 ## 1.0.0
 
-- Initial version.
+* Initial version.
 
 ## 1.0.1
 
-- Update Readme
-- Rename some class & methods
+* Update Readme
+* Rename some class \& methods
+
+## 1.0.2
+
+* correct Dsi.values.get

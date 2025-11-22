@@ -35,10 +35,10 @@ class DsiValue {
   /// Get datasync value instance.
   ///
   /// If key not found, null will be returned.
-  DsiValueInstance? get(String key) {
+  DsiValueInstance<T>? get<T>(String key) {
     var inst = _DataSyncInterfaceSingleton.instance;
     for (int i = 0; i < inst.dataList.length; i++) {
-      if (inst.dataList[i].key == key) return inst.dataList[i];
+      if (inst.dataList[i].key == key) return inst.dataList[i] as DsiValueInstance<T>;
     }
 
     return null;
