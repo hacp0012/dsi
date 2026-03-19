@@ -26,7 +26,10 @@ class _CallbackPage2ScreenState extends State<CallbackPage2Screen> {
             ElevatedButton.icon(
               onPressed: () {
                 // USAGE -----------------------------------------------------------------------------------------------------
-                bool isSent = Dsi.callback.call(DataKeys.SAMPLE_CALLBACK_KEY, payload: "This message come from closed page.");
+                bool isSent = Dsi.callback.call(
+                  DataKeys.SAMPLE_CALLBACK_KEY,
+                  payload: "This message come from closed page.",
+                );
                 if (isSent) {
                   _showSnackbar();
                 }
@@ -37,7 +40,11 @@ class _CallbackPage2ScreenState extends State<CallbackPage2Screen> {
             ),
 
             SizedBox(height: 24),
-            TextButton.icon(onPressed: () => Navigator.pop(context), icon: Icon(Icons.arrow_back), label: Text("Back")),
+            TextButton.icon(
+              onPressed: () => Navigator.pop(context),
+              icon: Icon(Icons.arrow_back),
+              label: Text("Back"),
+            ),
           ],
         ),
       ),
@@ -46,6 +53,8 @@ class _CallbackPage2ScreenState extends State<CallbackPage2Screen> {
 
   // METHODS -----------------------------------------------------------------------------------------------------------------
   void _showSnackbar() {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Message sent")));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text("Message sent")));
   }
 }

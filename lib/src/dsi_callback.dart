@@ -73,6 +73,8 @@ class DsiCallback {
   /// it [Widget] container are disposed. That mean, method callback
   /// are not exist. (Disposed with mather)
   void dispose(String ref) {
-    _DataSyncInterfaceSingleton.instance.callbacksList.removeWhere((key, value) => key == ref);
+    _DataSyncInterfaceSingleton.instance.callbacksList.removeWhere(
+      (key, value) => key == ref,
+    );
   }
 }

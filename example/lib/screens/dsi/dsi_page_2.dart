@@ -31,7 +31,11 @@ class _DsiPage2State extends State<DsiPage2> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              TextButton.icon(onPressed: () => Navigator.pop(context), icon: Icon(Icons.arrow_left), label: Text("Back")),
+              TextButton.icon(
+                onPressed: () => Navigator.pop(context),
+                icon: Icon(Icons.arrow_left),
+                label: Text("Back"),
+              ),
               SizedBox(width: 24),
               ElevatedButton.icon(
                 /// Increment count. -----------------------------------

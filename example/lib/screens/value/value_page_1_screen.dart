@@ -44,7 +44,11 @@ class _ValuePage1ScreenState extends State<ValuePage1Screen> {
       body: ListView(
         padding: EdgeInsets.all(12),
         children: [
-          Text("Shared value", style: Theme.of(context).textTheme.titleLarge, textAlign: TextAlign.center),
+          Text(
+            "Shared value",
+            style: Theme.of(context).textTheme.titleLarge,
+            textAlign: TextAlign.center,
+          ),
           SizedBox(height: 24),
 
           Card.filled(
@@ -52,7 +56,10 @@ class _ValuePage1ScreenState extends State<ValuePage1Screen> {
               padding: const EdgeInsets.all(12.0),
               child: Column(
                 children: [
-                  Text("Widget 1", style: Theme.of(context).textTheme.titleLarge),
+                  Text(
+                    "Widget 1",
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
                   SizedBox(height: 12),
                   // USAGE -----------------------------------------------------
                   Text("$count", style: TextStyle(fontWeight: FontWeight.bold)),
@@ -64,7 +71,8 @@ class _ValuePage1ScreenState extends State<ValuePage1Screen> {
                       // USAGE -------------------------------------------------------
                       Dsi.values.notifyTo<int>(
                         DataKeys.VALUE_ENV_KEY,
-                        (Dsi.values.get(DataKeys.VALUE_ENV_KEY)?.value ?? 0) + 1,
+                        (Dsi.values.get(DataKeys.VALUE_ENV_KEY)?.value ?? 0) +
+                            1,
                       );
                     },
                     child: Text("Increment value"),
@@ -81,13 +89,19 @@ class _ValuePage1ScreenState extends State<ValuePage1Screen> {
               padding: const EdgeInsets.all(12.0),
               child: Column(
                 children: [
-                  Text("Widget 2", style: Theme.of(context).textTheme.titleLarge),
+                  Text(
+                    "Widget 2",
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
                   SizedBox(height: 12),
                   // USAGE ------------------------------------------------------------------------------
                   DsiBuilder(
                     idKey: DataKeys.VALUE_ENV_KEY,
                     builder: (BuildContext context, data) {
-                      return Text("${data ?? 'Not yet'}", style: TextStyle(fontWeight: FontWeight.bold));
+                      return Text(
+                        "${data ?? 'Not yet'}",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      );
                     },
                   ),
                   Text("Usage via a Widget Builder"),

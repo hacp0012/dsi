@@ -2,17 +2,17 @@ import 'dsi_ui_value.dart';
 
 /// UI VALUE MIXIN
 ///
-/// Use only on [State]. Is avoid you to use more [setState], use less [setState]
-/// - Remember to use [late] declaration. If not you will be constrained to initialize its in
+/// Avoids the need to call [setState] everywhere.
+/// - Remember to use [late] declaration for variables. If not, you will be constrained to initialize them in
 /// [initState].
 ///
 /// ```dart
 ///  ...
-/// class _ExemplScreenState extends State<ExemplScreen> with DsiUiValueMixin {
+/// class _ExampleScreenState extends State<ExampleScreen> with DsiUiValueMixin {
 ///   late var isLoading = uiValue(false);
 ///
-///   @ovarride
-///   void Function(void Function() p1) get dsiStater => setState;
+///   @override
+///   void Function(void Function() p1) get dsiStateUpdater => setState;
 ///   ...
 /// }
 /// ```
@@ -21,18 +21,18 @@ mixin DsiUiValueMixin {
   ///
   /// ```dart
   /// @override
-  /// void Function(void Function() p1) get dsiStater => setState;
+  /// void Function(void Function() p1) get dsiStateUpdater => setState;
   /// ```
-  void Function(void Function()) get dsiStater;
+  void Function(void Function()) get dsiStateUpdater;
 
-  /// Initize value and return [UiValue<T>] value.
+  /// Initialize value and return [DsiUiValue<T>] value.
   ///
   /// ```dart
   /// late var isLoading = uiValue(false);
   /// ```
-  DsiUiValue<T> uiValue<T>(T value) => DsiUiValue<T>(dsiStater, value);
+  DsiUiValue<T> uiValue<T>(T value) => DsiUiValue<T>(dsiStateUpdater, value);
 
-  /// Update state by calling [uiSetState]
+  /// Update state manually
   ///
   /// ```dart
   /// uiUpdate();
@@ -41,5 +41,6 @@ mixin DsiUiValueMixin {
   ///   isUpdated = true;
   /// });
   /// ```
-  void uiUpdate([void Function()? fn]) => fn != null ? dsiStater.call(fn) : dsiStater.call(() {});
+  void uiUpdate([void Function()? fn]) =>
+      fn != null ? dsiStateUpdater.call(fn) : dsiStateUpdater.call(() {});
 }

@@ -6,8 +6,8 @@ class DsiValue {
   DsiValueInstance<T> register<T>({required T data, String? key}) {
     var dataSyncValue = DsiValueInstance<T>(value: data, idKey: key);
 
-    var dataSyncSengleton = _DataSyncInterfaceSingleton.instance;
-    dataSyncSengleton.addDataSyncInstanceToQueue(dataSyncValue);
+    var dataSyncSingleton = _DataSyncInterfaceSingleton.instance;
+    dataSyncSingleton.addDataSyncInstanceToQueue(dataSyncValue);
 
     return dataSyncValue;
   }
@@ -18,18 +18,17 @@ class DsiValue {
   }
 
   /// Subscribe a listener at anywhere.
-  static StreamSubscription<String>? listenTo<T>(String key, void Function(T data) callback) {
+  static StreamSubscription<String>? listenTo<T>(
+    String key,
+    void Function(T data) callback,
+  ) {
     return _DataSyncInterfaceSingleton.instance.listen(key, callback);
   }
 
   /// Check whether [key] exist.
   bool hasKey(String key) {
     var inst = _DataSyncInterfaceSingleton.instance;
-    for (int i = 0; i < inst.dataList.length; i++) {
-      if (inst.dataList[i].key == key) return true;
-    }
-
-    return false;
+    return inst.dataMap.containsKey(key);
   }
 
   /// Get datasync value instance.
@@ -37,10 +36,9 @@ class DsiValue {
   /// If key not found, null will be returned.
   DsiValueInstance<T>? get<T>(String key) {
     var inst = _DataSyncInterfaceSingleton.instance;
-    for (int i = 0; i < inst.dataList.length; i++) {
-      if (inst.dataList[i].key == key) return inst.dataList[i] as DsiValueInstance<T>;
+    if (inst.dataMap.containsKey(key)) {
+      return inst.dataMap[key] as DsiValueInstance<T>;
     }
-
     return null;
   }
 }

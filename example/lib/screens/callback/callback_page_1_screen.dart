@@ -17,7 +17,10 @@ class _CallbackPage1ScreenState extends State<CallbackPage1Screen> {
   @override
   void initState() {
     /// REGISTER A CALLBACK ----------------------------------------
-    Dsi.callback.register(DataKeys.SAMPLE_CALLBACK_KEY, (message) => updateWith(message as String));
+    Dsi.callback.register(
+      DataKeys.SAMPLE_CALLBACK_KEY,
+      (message) => updateWith(message as String),
+    );
 
     super.initState();
   }
@@ -42,7 +45,11 @@ class _CallbackPage1ScreenState extends State<CallbackPage1Screen> {
       body: ListView(
         padding: EdgeInsets.all(12),
         children: [
-          Text("Received message", style: Theme.of(context).textTheme.titleLarge, textAlign: TextAlign.center),
+          Text(
+            "Received message",
+            style: Theme.of(context).textTheme.titleLarge,
+            textAlign: TextAlign.center,
+          ),
           SizedBox(height: 18),
           // USAGE --------------------------------------
           Text(
@@ -54,14 +61,19 @@ class _CallbackPage1ScreenState extends State<CallbackPage1Screen> {
           FilledButton.tonalIcon(
             onPressed: () {
               // USAGE ------------------------------------------------------------------------------------
-              Dsi.callback.call(DataKeys.SAMPLE_CALLBACK_KEY, payload: "Hello! i'm the message you sent.");
+              Dsi.callback.call(
+                DataKeys.SAMPLE_CALLBACK_KEY,
+                payload: "Hello! i'm the message you sent.",
+              );
             },
             icon: Icon(Icons.send),
             label: Text("Send message"),
           ),
           SizedBox(height: 24),
           ElevatedButton.icon(
-            onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => CallbackPage2Screen())),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => CallbackPage2Screen()),
+            ),
             iconAlignment: IconAlignment.end,
             icon: Icon(Icons.arrow_right_alt),
             label: Text("Open send message page"),

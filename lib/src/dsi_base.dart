@@ -7,20 +7,19 @@ import 'package:flutter/material.dart';
 part 'core_data_sync_interface_singleton.dart';
 part 'dsi_value_instance.dart';
 part 'dsi_tree_observer.dart';
-part 'dsi_inner_tree_observer.dart';
 
 // Publics
 part 'dsi_builder.dart';
 part 'dsi_change_notifier.dart';
-part 'dsi_extention.dart';
+part 'dsi_extension.dart';
 part 'dsi_callback.dart';
 part 'dsi_value.dart';
 
 // * PUBLIC ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 /// __Data Sync Interface.__
 ///
-/// You will remark that all outputs are null safe. Because you can dispose a model via [unregister]
-/// of if is the value DSI, via [DsiValueInstance.freeIt].
+/// All outputs are null safe, because you can dispose a model via [unregister]
+/// or if it is the value DSI, via [DsiValueInstance.freeIt].
 ///
 /// __VALUE DSI__
 ///
@@ -30,8 +29,8 @@ part 'dsi_value.dart';
 /// // First usage.
 /// Dsi<int>(data: 123, key: refKey);
 ///
-/// // Sencaond usage.
-/// DsiInstance age = Dsi(data: 123, key: refKey);
+/// // Second usage.
+/// DsiValueInstance age = Dsi(data: 123, key: refKey);
 /// // or ----------
 /// DsiInstance age = Dsi(data: 123, key: null);
 /// // Id key (ref-key) will be auto-generated.
@@ -90,10 +89,10 @@ class Dsi {
   static DsiCallback get callback => DsiCallback();
 
   // |*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*| MODEL HANDLER |*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|
-  /// Get registred model.
+  /// Get registered model.
   ///
-  /// __Verry Strongly recommanded__:
-  /// The good place to use this, is inside a build method.
+  /// __Strongly recommended__:
+  /// The best place to use this is inside a build method.
   ///
   /// __Note that__: This method register a context to the tree.
   ///
@@ -103,47 +102,45 @@ class Dsi {
   /// - All data provided by [of] are in readOnly, try to update it's has no effect.
   static T? of<T>(BuildContext context) {
     var inst = _DataSyncInterfaceSingleton.instance;
-    for (int i = 0; i < inst.modelsList.length; i++) {
-      var element = inst.modelsList[i];
-      if (element is T && context.mounted) {
-        if (element is DsiChangeNotifier) {
-          /// Tree shake all unmounted contexts and if current context exist in tree.
-          List<BuildContext> newContexts = [];
-          for (int index = 0; index < element._currentTreePositionContexts.length; index++) {
-            if (element._currentTreePositionContexts[index] == context ||
-                element._currentTreePositionContexts[index].mounted == false) {
-              continue;
-            }
-            newContexts.add(element._currentTreePositionContexts[index]);
-          }
+    var element = inst.modelsMap[T];
+    if (element != null && context.mounted) {
+      if (element is DsiChangeNotifier) {
+        element._registerContext(context);
+      }
+      return element as T;
+    }
 
-          /// If current context ixist in the tree, old will be replaced by new.
-          newContexts.add(context);
-          element._currentTreePositionContexts = newContexts;
+    // Fallback: search by type if exact type parameter wasn't used correctly
+    for (var model in inst.modelsMap.values) {
+      if (model is T && context.mounted) {
+        if (model is DsiChangeNotifier) {
+          model._registerContext(context);
         }
-        return element;
+        return model;
       }
     }
 
     return null;
   }
 
-  /// Get registred model without context.
+  /// Get registered model without context.
   ///
-  /// This is tipicaly same as [of] but it not notify tree when change occure.
-  /// but some time it can acte as, if [DsiTreeObserver] is setted and [of]
-  /// is used before un tree.
+  /// This is similar to [of] but it does not notify the tree when a change occurs.
+  /// It can act similarly if [DsiTreeObserver] is set and [of] is used before in the tree.
   ///
-  /// Use this is same as you use a Singleton instance.
+  /// Using this is the same as using a Singleton instance.
   ///
-  /// The cool thing with this is that you can get your model without provide a
-  /// context.
+  /// The cool thing with this is that you can get your model without providing a context.
   static T? model<T>() {
     var inst = _DataSyncInterfaceSingleton.instance;
-    for (int i = 0; i < inst.modelsList.length; i++) {
-      var element = inst.modelsList[i];
-      if (element is T) {
-        return element;
+    if (inst.modelsMap.containsKey(T)) {
+      return inst.modelsMap[T] as T?;
+    }
+
+    // Fallback search
+    for (var model in inst.modelsMap.values) {
+      if (model is T) {
+        return model;
       }
     }
 
@@ -163,16 +160,23 @@ class Dsi {
       T updatedModel = provider(getedModel);
 
       var inst = _DataSyncInterfaceSingleton.instance;
-      for (int index = 0; index < inst.modelsList.length; index++) {
-        var item = inst.modelsList[index];
-        if (item.runtimeType == getedModel.runtimeType) {
-          inst.modelsList[index] = updatedModel;
 
-          // Notifiy tree.
-          if ((updatedModel is DsiChangeNotifier) && notify) updatedModel._shuldNotifyTree();
-
-          return true;
+      // Update in map based on actual key
+      dynamic keyToUpdate;
+      for (var key in inst.modelsMap.keys) {
+        if (inst.modelsMap[key] == getedModel) {
+          keyToUpdate = key;
+          break;
         }
+      }
+
+      if (keyToUpdate != null) {
+        inst.modelsMap[keyToUpdate] = updatedModel;
+        // Notify tree
+        if ((updatedModel is DsiChangeNotifier) && notify) {
+          updatedModel._shouldNotifyTree();
+        }
+        return true;
       }
     }
 
@@ -181,54 +185,34 @@ class Dsi {
 
   /// Register instance.
   ///
-  /// Register tow kinds of class types
-  /// - primitive class with other extends class or not (Lazy Singleton).
-  /// - Class that extend ChangeNotifier or subtype of it. It recommanded to
-  /// use [DsiChangeNotifier] on your model to handle notifier. (Lazy Singleton)
-  /// - singleton instance.
+  /// Registers two kinds of class types:
+  /// - Primitive class with other extends class or not (Lazy Singleton).
+  /// - Class that extends ChangeNotifier or subtype of it. It's recommended to
+  ///   use [DsiChangeNotifier] on your model to handle notifications.
   ///
   /// ```dart
-  /// Dsi.registerModel<MyModel1>(MyModel1());
+  /// Dsi.register<MyModel1>(MyModel1());
   /// ```
   ///
-  /// If a model is registred twice, old are removed. this behavior can  be prevent by
-  /// [keepOld]. Keep or concervet old registred model instance. Default is false.
-  /// it prevent default behavior that replace old model instance.
+  /// If a model is registered twice, the old one will be removed. This behavior can be prevented by
+  /// setting [keepOld] to true. The default is false.
   static void register<T>(T model, {bool keepOld = false}) {
-    /// REGISTER.
-    /// If old of this model already exist in tree, remove it.
     var inst = _DataSyncInterfaceSingleton.instance;
-    for (int i = 0; i < inst.modelsList.length; i++) {
-      if (inst.modelsList[i].runtimeType == model.runtimeType) {
-        // PREVENT REPLACEMENT OF OLD INSTANCE.
-        if (keepOld) return;
+    Type key = T == dynamic ? model.runtimeType : T;
 
-        // REPLACEMENT.
-        inst.modelsList.removeAt(i);
-        break;
+    if (inst.modelsMap.containsKey(key)) {
+      if (keepOld) return;
+    } else {
+      for (var existingKey in inst.modelsMap.keys) {
+        if (inst.modelsMap[existingKey].runtimeType == model.runtimeType) {
+          if (keepOld) return;
+          key = existingKey;
+          break;
+        }
       }
     }
 
-    /// Setting a listener for the current registred model.
-    if (model is DsiChangeNotifier) {
-      model.addListener(() {
-        if (model._currentTreePositionContexts.isNotEmpty) {
-          List<BuildContext> newContexts = [];
-          for (int index = 0; index < model._currentTreePositionContexts.length; index++) {
-            BuildContext context = model._currentTreePositionContexts[index];
-
-            /// Tree shake all unmounted contexts.
-            if (context.mounted) {
-              _DsiInnerTreeObserver.of<DsiChangeNotifier>(context)._shuldNotifyTree();
-              newContexts.add(context);
-            }
-          }
-          model._currentTreePositionContexts = newContexts;
-        }
-      });
-    }
-
-    inst.modelsList.add(model);
+    inst.modelsMap[key] = model;
   }
 
   /// Register many models instances.
@@ -247,26 +231,37 @@ class Dsi {
     }
   }
 
-  /// Unregister a registred model.
+  /// Unregister a registered model.
   ///
-  /// If model instance exist, old will be removed.
+  /// If the model instance exists, it will be removed.
   static bool unregister<T>() {
     var inst = _DataSyncInterfaceSingleton.instance;
-    for (int index = 0; index < inst.modelsList.length; index++) {
-      var model = inst.modelsList[index];
-      if (model is T) {
-        inst.modelsList.removeAt(index);
-        return true;
+    if (inst.modelsMap.containsKey(T)) {
+      inst.modelsMap.remove(T);
+      return true;
+    }
+
+    var keysToRemove = [];
+    for (var key in inst.modelsMap.keys) {
+      if (inst.modelsMap[key] is T) {
+        keysToRemove.add(key);
       }
+    }
+
+    if (keysToRemove.isNotEmpty) {
+      for (var key in keysToRemove) {
+        inst.modelsMap.remove(key);
+      }
+      return true;
     }
 
     return false;
   }
 
-  /// Rebuild this context.
-  ///
-  /// Can be used to rebuid (update) provided (ui) context.
+  /// Rebuild this context if it's subscribed.
   static void rebuildThis(BuildContext context) {
-    _DsiInnerTreeObserver.of<DsiChangeNotifier>(context)._shuldNotifyTree();
+    if (context is Element) {
+      context.markNeedsBuild();
+    }
   }
 }

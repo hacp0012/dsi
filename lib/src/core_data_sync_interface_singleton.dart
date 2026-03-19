@@ -4,97 +4,93 @@ part of 'dsi_base.dart';
 class _DataSyncInterfaceSingleton {
   static _DataSyncInterfaceSingleton? _inst;
   _DataSyncInterfaceSingleton._();
+
   static _DataSyncInterfaceSingleton get instance {
     if (_inst != null) return _inst!;
 
     _inst = _DataSyncInterfaceSingleton._();
-    _inst!._streameController = StreamController<String>.broadcast(onCancel: () => instance.dataList.clear());
-    _inst!._stream = _inst!._streameController.stream;
+    _inst!._streamController = StreamController<String>.broadcast(
+      onCancel: () => instance.dataMap.clear(),
+    );
+    _inst!._stream = _inst!._streamController.stream;
 
     return _inst ??= _DataSyncInterfaceSingleton._();
   }
   // ============== SINGLETON ===============
 
   @protected
-  late StreamController<String> _streameController;
+  late StreamController<String> _streamController;
+
   @protected
   late Stream<String> _stream;
+
   @protected
-  List<DsiValueInstance> dataList = [];
+  Map<String, DsiValueInstance> dataMap = {};
 
   /// Add a DSI (Data Sync Instance) to queue.
   ///
-  /// If DSI has same key, the old instance is remove and the new is appended;
+  /// If DSI has the same key, the old instance is replaced.
   @protected
   void addDataSyncInstanceToQueue(DsiValueInstance dsi) {
-    dataList.removeWhere((element) => element.key == dsi.key);
-    dataList.add(dsi);
+    dataMap[dsi.key] = dsi;
   }
 
   /// Notify all listeners.
   ///
-  /// If key not found, noting will do.
+  /// If key not found, nothing will happen.
   ///
-  /// When you notify with [payload], this data will replace global value.
+  /// When you notify with [payload], this data will replace the global value.
   ///
-  /// Return true if key is matched and event treamed.
+  /// Return true if key is matched and event streamed.
   ///
-  /// If [payload] Type not match with value data type, [TypeError] Exception is throwed.
+  /// If [payload] runtimeType doesn't match the value data type, [TypeError] Exception is thrown.
   @protected
   bool notify<T>(String key, T? payload) {
-    for (int i = 0; i < dataList.length; i++) {
-      if (dataList[i].key == key) {
-        if (payload != null) {
-          if (dataList[i].value.runtimeType == payload.runtimeType) {
-            dataList[i]._value = payload;
-          } else {
-            throw TypeError();
-          }
-        }
-        _streameController.sink.add(key);
-        return true;
+    if (!dataMap.containsKey(key)) return false;
+
+    var instance = dataMap[key]!;
+    if (payload != null) {
+      if (instance.value.runtimeType == payload.runtimeType ||
+          instance.value is T?) {
+        instance._value = payload;
+      } else {
+        throw TypeError();
       }
     }
-
-    return false;
+    _streamController.sink.add(key);
+    return true;
   }
 
   /// Listen to a key.
   ///
-  /// At anytime event match the key, callback will be called.
+  /// At any time an event matches the key, the callback will be called.
   @protected
-  StreamSubscription<String>? listen<T>(String key, void Function(T data) callback) {
-    // Verify key existance before.
-    bool keyNotMatched = true;
-    for (int i = 0; i < dataList.length; i++) {
-      keyNotMatched = !(dataList[i].key == key);
-    }
-    if (keyNotMatched) return null;
+  StreamSubscription<String>? listen<T>(
+    String key,
+    void Function(T data) callback,
+  ) {
+    if (!dataMap.containsKey(key)) return null;
 
     // Start listening.
-    var streamSubscription = _stream.listen((eventKey) {
-      for (int i = 0; i < dataList.length; i++) {
-        if (eventKey == key && dataList[i].key == key) {
-          callback(dataList[i].value);
-          // return true;
-        }
+    return _stream.listen((eventKey) {
+      if (eventKey == key && dataMap.containsKey(key)) {
+        var instance = dataMap[key]!;
+        callback(instance.value as T);
       }
     });
-
-    return streamSubscription;
   }
 
   /// Close stream.
   @protected
-  void closeStream() => _streameController.close();
+  void closeStream() => _streamController.close();
 
   /// Clean all stream.
   @protected
-  void clearAllStream() => dataList.clear();
+  void clearAllStream() => dataMap.clear();
 
   // |*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|
   @protected
-  List modelsList = [];
+  Map<Type, dynamic> modelsMap = {};
 
   // |*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|*|
   @protected

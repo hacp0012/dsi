@@ -1,287 +1,240 @@
-Synchronize and share data, callbacks and global values between widgets and models without strong coupling.
-
 # Data Sync Interface (DSI)
 
 <p align="center">
     <img src="./assets/dsi_logo.png" width="200" alt="DSI Logo">
 </p>
 
-DSI is a small Flutter/Dart library to synchronize and share data, callbacks and global values between widgets and models without strong coupling.
+DSI (Data Sync Interface) is a powerful, lightweight, and professional State Manager library for Flutter. It allows you to synchronize and share observable models, global values, and event callbacks between widgets seamlessly.
 
-## Main concepts
+With `DSI`, you can significantly reduce boilerplate code, avoid memory leaks natively, and minimize repetitive `setState` logic, all without strong coupling.
 
-- Share observable models via `Dsi.register`, `Dsi.of()` and `Dsi.update()`.
-- Global values with `Dsi.values`.
-- Named callbacks via `Dsi.callback`.
-- Lightweight UI helpers via `DsiUiValue` and `DsiUiValueMixin`.
+---
 
-## Features
+## 🌟 Key Features
 
-- Registration and update of models (supports extended `ChangeNotifier`).
-- Automatic notifications to linked widgets.
-- Management of shared values and listeners by key.
-- Named callbacks for one-time communication between screens.
-- Utilities to reduce `setState` calls with `DsiUiValue` and `DsiUiValueMixin`.
+1. **Observable Models**: Register and update globally shared models with `DsiChangeNotifier` yielding surgical optimizations (O(1) memory caching).
+2. **Context Extension**: Use `context.dsi<Model>()` directly to access and listen to state changes effortlessly.
+3. **Global Value Tracking**: Reactive global scopes using `Dsi.values` and listening efficiently inside `DsiBuilder`.
+4. **Event Bus (Callbacks)**: Dispatch named events and callbacks anywhere in your app via `Dsi.callback`.
+5. **Smart Local UI State**: Stop writing tedious boilerplate for local logic by leveraging `DsiUiValueMixin` and `uiValue`.
 
-### Usage in example
+---
 
-1. From the `example` folder:
+## 📖 Table of Contents
 
-See the example main file: [example/lib/main.dart](example/lib/main.dart)
+- [Data Sync Interface (DSI)](#data-sync-interface-dsi)
+  - [🌟 Key Features](#-key-features)
+  - [📖 Table of Contents](#-table-of-contents)
+  - [🚀 Getting Started (Initialization)](#-getting-started-initialization)
+  - [🧰 1. Observable Models (Core State)](#-1-observable-models-core-state)
+    - [Defining a Model](#defining-a-model)
+    - [Registering & Accessing](#registering--accessing)
+    - [Updating Models Remotely](#updating-models-remotely)
+  - [🌐 2. Global Scoped Values (`Dsi.values`)](#-2-global-scoped-values-dsivalues)
+  - [⚡ 3. Unified Callbacks (`Dsi.callback`)](#-3-unified-callbacks-dsicallback)
+  - [🎯 4. Smart Local State (`DsiUiValueMixin`)](#-4-smart-local-state-dsiuivaluemixin)
+  - [💡 Best Practices](#-best-practices)
 
-```powershell
-cd example
-flutter pub get
-flutter run
+---
+
+## 🚀 Getting Started (Initialization)
+
+To use DSI throughout your application, you should utilize the **`DsiTreeObserver`** widget at the root of your app. This widget acts as an entry point for initializing global models effectively.
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:dsi/dsi.dart';
+
+void main() {
+  runApp(
+    // Optionally pre-register multiple models efficiently:
+    DsiTreeObserver(
+      models: [ ThemeController(), AuthModel() ], // Registration
+      child: const MyApp(),
+    ),
+  );
+}
 ```
 
-### Quick usage
+---
 
-1) Observable models (with `DsiChangeNotifier`)
+## 🧰 1. Observable Models (Core State)
 
-### Model example (lib/models/counter_model.dart):
+Instead of using Flutter's traditional `ChangeNotifier`, DSI introduces a highly optimized **`DsiChangeNotifier`**. It automatically handles context subscriptions and garbage collection (ignoring unmounted widgets) internally native through a highly efficient `Set<BuildContext>`.
+
+### Defining a Model
 
 ```dart
 import 'package:dsi/dsi.dart';
 
+// 1. Extend the professional DsiChangeNotifier
 class CounterModel extends DsiChangeNotifier {
-    int _count = 0;
-    int get count => _count;
+  int _count = 0;
+  int get count => _count;
 
-    void increment() {
-        _count++;
-        notifyListeners();
-    }
-
-    void reset() {
-        _count = 0;
-        notifyListeners();
-    }
+  void increment() {
+    _count++;
+    
+    // 2. Call trigger to rebuild ONLY dependent widgets!
+    notifyListeners(); 
+  }
 }
 ```
 
-Model registration (e.g. in `main.dart`):
+### Registering & Accessing
+
+Models must be registered so they can be available from anywhere.
+You can register it at the application root using `DsiTreeObserver` (as seen above) or manually via `Dsi.register()`.
 
 ```dart
-void main() {
-    Dsi.register(CounterModel());
-    runApp(const MyApp());
+// Register manually inside an initialization phase
+Dsi.register(CounterModel());
+```
+
+In your widgets, you have two ways to retrieve the data safely:
+
+```dart
+@override
+Widget build(BuildContext context) {
+  // Option A (Cleanest): Use the DsiExtension directly on the context
+  final counter = context.dsi<CounterModel>();
+
+  // Option B: Query DSI natively 
+  final sameCounter = Dsi.of<CounterModel>(context);
+
+  return Scaffold(
+    body: Center(
+      child: Text('Count: ${counter?.count ?? 0}'),
+    ),
+    floatingActionButton: FloatingActionButton(
+      onPressed: () => counter?.increment(),
+      child: const Icon(Icons.add),
+    ),
+  );
 }
 ```
 
-Access and update:
+### Updating Models Remotely
+
+If you are inside a function where you **don't have access to your UI context**, you can still update your models globally using `Dsi.update<T>()`. This will automatically trigger rebuilds on contexts listening to it across the app.
 
 ```dart
-// Connect the app to DSI observer (important)
-DsiTreeObserver(child: MaterialApp(...));
-
-// reading
-final counter = Dsi.of<CounterModel>(context);
-Text('Count: ${counter?.count ?? 0}');
-Text('Count: ${Dsi.of<CounterModel>(context)?.count}');
-Text('Count: ${Dsi.model<CounterModel>(context)?.count}');
-Text('Count: ${context.dsi<CounterModel>()?.count} : From DSI Extension');
-
-// via model method
-counter?.increment();
-
-// or via Dsi.update
-Dsi.update<CounterModel>((m) { m.count += 1; return m; });
+void performBackgroundSync() {
+  // Fetch data natively and update UI listeners seamlessly
+  Dsi.update<CounterModel>((model) {
+     model.increment(); 
+     return model;
+  });
+}
 ```
 
-### Global values (Dsi.values)
+---
+
+## 🌐 2. Global Scoped Values (`Dsi.values`)
+
+Sometimes you just want to track a simple variable (a string, a boolean, or an int) across the app without constructing an entire Model Class. `Dsi.values` behaves like a Key-Value pair store that offers robust streaming!
+
+**Register & Use with DsiBuilder:**
+```dart
+// 1. Register a value globally via key
+Dsi.values.register<bool>(data: false, key: 'isDarkMode');
+
+// 2. Build reactive UIs using DsiBuilder corresponding to the target key
+Widget build(BuildContext context) {
+  return DsiBuilder<bool>(
+    idKey: 'isDarkMode',
+    builder: (context, isDark) {
+      return MaterialApp(
+        theme: isDark == true ? ThemeData.dark() : ThemeData.light(),
+        home: const Home(),
+      );
+    },
+  );
+}
+```
+
+**Modifying the value from anywhere:**
+```dart
+// Change the value - This will automatically trigger DsiBuilder to build again!
+Dsi.values.notifyTo<bool>('isDarkMode', true);
+```
+
+---
+
+## ⚡ 3. Unified Callbacks (`Dsi.callback`)
+
+DSI allows you to map named callback events globally. This prevents deep "prop-drilling" of callback functions traversing across numerous constructor arguments.
 
 ```dart
-// register a shared value
-DsiValueInstance instance =  Dsi.values.register<int>(data: 0, key: 'globalCount');
+// Register an event callback in Widget A:
+Dsi.callback.register('onUserLogout', (payload) {
+   print('User Logged Out with message: $payload');
+});
 
-// notify listeners
-Dsi.values.notifyTo<int>('globalCount', 42);
-
-// listen
-var sub = Dsi.values.listenTo<int>('globalCount', (v) => print(v));
-
-// update
-instance.value = 42;
-
-// Get value instance
-DsiValueInstance? instance = Dsi.values.get<int>('globalCount');
+// Trigger the event safely from Widget B:
+Dsi.callback.call('onUserLogout', payload: 'Session Expired!');
 ```
 
-### Named callbacks
+---
 
-```dart
-// register
-Dsi.callback.register('my_key', (payload) => print(payload));
+## 🎯 4. Smart Local State (`DsiUiValueMixin`)
 
-// call from another screen
-Dsi.callback.call('my_key', payload: 'message');
-```
+Are you tired of maintaining a verbose amount of `setState(() {})` calls for local states like `isLoading` or `isExpanded`? The implementation of `DsiUiValueMixin` drastically accelerates simple local UI reactivity. 
 
-### DsiUiValue and DsiUiValueMixin (new section)
-
-Quick details:
-
-- `DsiUiValue<T>` is a small wrapper for local UI state that reduces verbosity around `setState`.
-- `DsiUiValueMixin` is a mixin to use on `StatefulWidget`'s `State` to easily create `DsiUiValue` using a `dsiStater` getter that must return `setState`.
-
-Essential API (implementation in `lib/src`):
-
-- `DsiUiValue<T>`: constructor `DsiUiValue(void Function(void Function()) setState, T initialValue)`.
-    - `.value`: read/write (writing triggers `setState`).
-    - `.silent`: write without triggering `setState`.
-    - `.update()`: force update (calls `setState(() {})`).
-
-- `DsiUiValueMixin`:
-    - Declares abstract getter `void Function(void Function()) get dsiStater;` that `State` must implement (`=> setState`).
-    - `uiValue<T>(T initial)` returns a `DsiUiValue<T>` already bound to `dsiStater`.
-    - `uiUpdate([fn])` performs `setState` via `dsiStater`.
-
-Usage example (in a `StatefulWidget`)
+**Quick implementation rules:**
+1. Extend `with DsiUiValueMixin` in your `State` class.
+2. Override `dsiStateUpdater` property, hooking it natively to `setState`.
+3. Track properties cleanly with `uiValue<T>(initial)`.
 
 ```dart
 class SettingsScreen extends StatefulWidget {
-    const SettingsScreen({Key? key}) : super(key: key);
-    @override
-    State<SettingsScreen> createState() => _SettingsScreenState();
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
 class _SettingsScreenState extends State<SettingsScreen> with DsiUiValueMixin {
-    // Bind dsiStater to this State's setState
-    @override
-    void Function(void Function()) get dsiStater => setState;
+  
+  // 1. Delegate DSI Updater to Flutter's native setState handler
+  @override
+  void Function(void Function()) get dsiStateUpdater => setState;
 
-    // late to initialize before initState if needed
-    late final DsiUiValue<bool> isLoading = uiValue(false);
-    // late var isLoading = uiValue(false);
+  // 2. Define reactive values cleanly (Use late syntax)
+  late final DsiUiValue<bool> isLoading = uiValue(false);
+  late final DsiUiValue<String> userStatus = uiValue('Active');
 
-    @override
-    void initState() {
-        super.initState();
-        // Example: register a DSI callback
-        Dsi.callback.register('onReset', (_) {
-            Dsi.update<CounterModel>((m) { m.reset(); return m; });
-        });
-    }
-
-    @override
-    void dispose() {
-        Dsi.callback.unregister('onReset');
-        super.dispose();
-    }
-
-    @override
-    Widget build(BuildContext context) {
-        return Scaffold(
-            appBar: AppBar(title: const Text('Settings')),
-            body: Center(
-                child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                        if (isLoading.value) const CircularProgressIndicator(),
-                        ElevatedButton(
-                            onPressed: () async {
-                                // change value and trigger rebuild
-                                isLoading.value = true;
-                                await Future.delayed(const Duration(seconds: 1));
-                                isLoading.value = false;
-                            },
-                            child: const Text('Do work'),
-                        ),
-                    ],
-                ),
-            ),
-        );
-    }
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        if (isLoading.value) const CircularProgressIndicator(),
+        
+        Text("Status: ${userStatus.value}"), // Reactive text
+        
+        ElevatedButton(
+          onPressed: () async {
+            // 3. Mutating the .value directly invokes setState securely!
+            isLoading.value = true;
+            userStatus.value = "Processing...";
+            
+            await Future.delayed(const Duration(seconds: 2));
+            
+            isLoading.value = false;
+            userStatus.value = "Finished";
+          },
+          child: const Text('Simulate Load'),
+        ),
+      ],
+    );
+  }
 }
 ```
 
-### MaterialApp - complete example
+---
 
-```dart
-// lib/app.dart
-import 'package:flutter/material.dart';
-import 'package:dsi/dsi.dart';
-import 'screens/counter_screen.dart';
-import 'screens/settings_screen.dart';
+## 💡 Best Practices
 
-class MyApp extends StatelessWidget {
-    const MyApp({Key? key}) : super(key: key);
+1. **Clean up manual listeners**: `DsiChangeNotifier` natively prevents memory leaks automatically. However, if you explicitly attach subscriptions using raw `listen()` logic inside `initState`, always drop them via `freeIt()` in your `dispose()`.
+2. **One Ideology**: Ensure to use `DsiChangeNotifier` explicitly instead of Flutter's stock `ChangeNotifier`. Internal implementations depend heavily on targeted Context-mapping.
+3. **Optimized Lookup**: DSI performs state searches instantly natively mapped in `O(1)` Hash Maps. Name your `Keys` distinctly.
 
-    @override
-    Widget build(BuildContext context) {
-        return MaterialApp(
-            title: 'DSI Demo',
-            theme: ThemeData(primarySwatch: Colors.blue),
-            initialRoute: '/',
-            routes: {
-                '/': (context) => const CounterScreen(),
-                '/settings': (context) => const SettingsScreen(),
-            },
-            builder: (context, child) {
-                // Example of using Dsi.values to manage a simple theme
-                Dsi.values.register<bool>(data: false, key: 'isDarkMode');
-
-                return DsiBuilder<bool>(
-                    idKey: 'isDarkMode',
-                    builder: (context, isDark) {
-                        return Theme(
-                            data: isDark ? ThemeData.dark() : ThemeData.light(),
-                            child: child ?? const SizedBox.shrink(),
-                        );
-                    },
-                );
-            },
-        );
-    }
-}
-
-// lib/main.dart
-void main() {
-    Dsi.registerModel(CounterModel());
-    runApp(const MyApp());
-}
-```
-
-#### Useful files
-
-- Export point: `lib/dsi.dart`
-- Implementations: `lib/src/*` (e.g. `dsi_base.dart`, `dsi_change_notifier.dart`, `dsi_ui_value.dart`, `dsi_ui_value_mixin.dart`)
-- Examples: `example/lib/...` (example pages and models)
-
-#### Best practices
-
-- Use `DsiChangeNotifier` for your models to benefit from automatic notifications.
-- Use `DsiUiValue`/`DsiUiValueMixin` to reduce the surface usage of `setState` on local UI values.
-- Release resources (listeners, callbacks) in `dispose()` of `StatefulWidget` when needed.
-
-Contributing
-
-- Open an issue or PR.
-- Respect the license (see `LICENSE`) and changelog (`CHANGELOG.md`).
-
-License
-
-[BSD-3-Clause](./LICENSE) — see project LICENSE file.
-
-Changelog
-
-- See `CHANGELOG.md`
-
-Try the example
-
-1. Open a terminal in `example/`:
-
-```powershell
-cd example
-flutter pub get
-flutter run
-```
-
-2. If you added the logo, check `pubspec.yaml` and `assets/`.
-
-Summary of changes
-
-- Added documentation and examples for `DsiUiValue` and `DsiUiValueMixin`.
-- Complete `MaterialApp` example showing DSI integration (model, values, callbacks, UI mixin).
-- Indication about `dsi_logo.png` asset and `pubspec.yaml` configuration.
+*(License references and package data belong to their respective proprietary authors).*

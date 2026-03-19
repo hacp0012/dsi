@@ -67,8 +67,16 @@ class _DemoHomePageState extends State<DemoHomePage> with DsiUiValueMixin {
 
       body: ListView(
         children: [
-          Text("Data Synchronizer Interface", textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleLarge),
-          Text("Concepts demonstractions", textAlign: TextAlign.center, style: Theme.of(context).textTheme.labelLarge),
+          Text(
+            "Data Synchronizer Interface",
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          Text(
+            "Concepts demonstractions",
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.labelLarge,
+          ),
 
           SizedBox(height: 63),
           Column(
@@ -79,7 +87,9 @@ class _DemoHomePageState extends State<DemoHomePage> with DsiUiValueMixin {
               Text("DSI", style: TextStyle(fontWeight: FontWeight.bold)),
               Text("Handle Data Sync Interface"),
               ElevatedButton.icon(
-                onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => const DsiPage1())),
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const DsiPage1()),
+                ),
                 icon: Icon(Icons.open_in_browser),
                 label: Text("Open demo view"),
                 style: ButtonStyle(iconAlignment: IconAlignment.end),
@@ -87,10 +97,17 @@ class _DemoHomePageState extends State<DemoHomePage> with DsiUiValueMixin {
 
               // CALLBACK
               SizedBox(height: 38),
-              Text("DSI CALLBACK", style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(
+                "DSI CALLBACK",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               Text("Test DSI callbacks system"),
               ElevatedButton.icon(
-                onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => CallbackPage1Screen())),
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => CallbackPage1Screen(),
+                  ),
+                ),
                 icon: Icon(Icons.open_in_browser),
                 label: Text("Open demo view"),
                 style: ButtonStyle(iconAlignment: IconAlignment.end),
@@ -101,7 +118,9 @@ class _DemoHomePageState extends State<DemoHomePage> with DsiUiValueMixin {
               Text("DSI VALUE", style: TextStyle(fontWeight: FontWeight.bold)),
               Text("Test env value"),
               ElevatedButton.icon(
-                onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => ValuePage1Screen())),
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => ValuePage1Screen()),
+                ),
                 icon: Icon(Icons.open_in_browser),
                 label: Text("Open demo view"),
                 style: ButtonStyle(iconAlignment: IconAlignment.end),
@@ -109,10 +128,17 @@ class _DemoHomePageState extends State<DemoHomePage> with DsiUiValueMixin {
 
               // UI VALUE
               SizedBox(height: 38),
-              Text("DSI UI VALUE", style: TextStyle(fontWeight: FontWeight.bold)),
+              Text(
+                "DSI UI VALUE",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               Text("Test for UI value: simplify the call of setState"),
               // USAGE -----------------------------------------------------------------------------------------------
-              Text("${simpleCount.value}", style: Theme.of(context).textTheme.titleLarge, textAlign: TextAlign.center),
+              Text(
+                "${simpleCount.value}",
+                style: Theme.of(context).textTheme.titleLarge,
+                textAlign: TextAlign.center,
+              ),
               ElevatedButton.icon(
                 onPressed: () => simpleCount.value += 1,
                 icon: Icon(Icons.add),
@@ -127,5 +153,5 @@ class _DemoHomePageState extends State<DemoHomePage> with DsiUiValueMixin {
   }
 
   @override
-  void Function(void Function() p1) get dsiStater => setState;
+  void Function(void Function() p1) get dsiStateUpdater => setState;
 }

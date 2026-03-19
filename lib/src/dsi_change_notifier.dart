@@ -3,20 +3,35 @@ part of 'dsi_base.dart';
 // * PUBLIC ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 /// Default DSI Change notifier.
 ///
-/// Is extend [ChangeNotifier] with litle more context data.
+/// It extends [ChangeNotifier] with a little more context data.
 ///
-/// Strongly recommanded Use [DsiChangeNotifier] enstead of [ChangeNotifier].
+/// Strongly recommended: Use [DsiChangeNotifier] instead of [ChangeNotifier].
 class DsiChangeNotifier extends ChangeNotifier {
-  /// Current Tree cursor Position in Context tree.
-  ///
-  /// Use to notify [DsiTreeObserver]
+  /// Track contexts efficiently using a Set to prevent duplicates.
   @protected
-  late List<BuildContext> _currentTreePositionContexts = [];
+  final Set<BuildContext> _contexts = {};
 
-  /// Rebuild tree on notification.
+  /// Registers a context to be rebuilt when notifyListeners is called.
   @protected
-  void _shuldNotifyTree() {
-    // currentEntryContext = null;
+  void _registerContext(BuildContext context) {
+    _contexts.removeWhere((ctx) => !ctx.mounted);
+    _contexts.add(context);
+  }
+
+  /// Triggers a rebuild of all registered contexts.
+  @protected
+  void _shouldNotifyTree() {
     notifyListeners();
+  }
+
+  @override
+  void notifyListeners() {
+    super.notifyListeners();
+    _contexts.removeWhere((ctx) => !ctx.mounted);
+    for (var context in _contexts) {
+      if (context is Element && context.mounted) {
+        context.markNeedsBuild();
+      }
+    }
   }
 }

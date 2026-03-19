@@ -36,7 +36,10 @@ class _DsiPage1State extends State<DsiPage1> {
               padding: const EdgeInsets.all(12.0),
               child: Column(
                 children: [
-                  Text("First case of usage", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  Text(
+                    "First case of usage",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
                   SizedBox(height: 12),
 
                   /// USAGE --------------------------------------------------
@@ -67,7 +70,10 @@ class _DsiPage1State extends State<DsiPage1> {
               padding: const EdgeInsets.all(12.0),
               child: Column(
                 children: [
-                  Text("Second case of usage", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  Text(
+                    "Second case of usage",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
                   SizedBox(height: 12),
 
                   /// USAGE --------------------------------------------------
@@ -79,7 +85,11 @@ class _DsiPage1State extends State<DsiPage1> {
                   Text("Go to second page and update counter"),
                   ElevatedButton.icon(
                     onPressed: () {
-                      Navigator.of(context).push(MaterialPageRoute(builder: (context) => const DsiPage2()));
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const DsiPage2(),
+                        ),
+                      );
                     },
                     icon: Icon(Icons.arrow_right_alt),
                     iconAlignment: IconAlignment.end,
